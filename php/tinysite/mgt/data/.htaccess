@@ -1,0 +1,7 @@
+# Make sure that this directory is unreadable to the world.
+# Passwords are kept here.
+
+<Limit GET POST>
+  Order Deny,Allow
+  Deny from All
+</Limit>

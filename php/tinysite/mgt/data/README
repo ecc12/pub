@@ -1,0 +1,35 @@
+
+TINYSITE v1.00
+cking@ecc12.com
+
+CREDIT
+
+Cameron King put this quick hack of a CMF together to meet his own needs.
+Because TinySite builds on other LGPL code, TinySite itself is released
+under the LGPL v3 http://www.gnu.org/licenses/lgpl.html.  See COPYING
+for more details.
+
+Smarty and TinyMCE are both LGPL projects that have been bundled with 
+this package.
+
+INSTALL INSTRUCTIONS
+
+1. Extract the tinysite tarball into a web-accessible directory.  
+
+2. Ensure that the mgt/data directory cannot be read by visitors.  You can do
+this with an .htaccess file in apache (see PROTECTME for example).
+
+3. Update the master password at the top of index.php with either a sha1/md5
+hash or plaintext password.  This password will edit or create any page.
+
+4. Update the template in mgt/data/templates/index.tpl
+
+5. Start editing!
+
+SPECIAL PROTECTION ON A FILE
+
+If you want to protect a single page with an additional password in top of
+the master password, create a file for that page at mgt/data/meta/pagename.pw
+containing additional passwords, one per line.  There are no usernames.
+
+
