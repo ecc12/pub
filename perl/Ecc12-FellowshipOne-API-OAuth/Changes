@@ -1,0 +1,7 @@
+Revision history for Perl extension Ecc12::FellowshipOne::API::OAuth.
+
+1.02  Tue Feb 21 06:33:01 2012
+	- initial public release
+	- original version; created by h2xs 1.23 with options
+		-XAn Ecc12::FellowshipOne::API::OAuth
+
