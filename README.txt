@@ -5,6 +5,6 @@ This open source repository is provided by ECC.
   large, structured efforts.
                                                                   Tim O'Reilly 
 
-More information is available at http://www.ecc12.com.
+More information is available at http://www.ecc.guru.
 
-Please contact Cameron King at cking@ecc12.com for questions or comments.
+Please contact Cameron King at cameron.king@ecc.email for questions or comments.
