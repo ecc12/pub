@@ -7,4 +7,6 @@ This open source repository is provided by ECC.
 
 More information is available at http://www.ecc.guru.
 
+Additional projects can be found at https://github.com/ecc12.
+
 Please contact Cameron King at cameron.king@ecc.email for questions or comments.
