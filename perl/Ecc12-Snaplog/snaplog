@@ -4,32 +4,32 @@ use warnings;
 
 =head1 NAME
 
-crashlog - A tool for collecting diagnostic data in a hurry
+snaplog - A tool for collecting diagnostic data in a hurry
 
 =cut
 
-package Ecc12::CrashLog;
+package Ecc12::SnapLog;
 
 =head1 SYNOPSIS
 
-crashlog
+snaplog
 
     -h --help     print this message
     -H --host     specify multiple times for multiple remost hosts
     -o --out      file to write the output to or - for STDOUT
-                  (default: /var/tmp/crashlog/{DATE}.log)
+                  (default: /var/tmp/snaplog/{DATE}.log)
     -c --config   specify config file (list of commands to run)
     -v --verbose  specify multiple times to increase verbosity
 
 =cut
 
 my $HELP = <<HELP;
-crashlog
+snaplog
 
     -h --help     print this message
     -H --host     specify multiple times for multiple remost hosts
     -o --out      file to write the output to or - for STDOUT
-                  (default: /var/tmp/crashlog/{DATE}.log)
+                  (default: /var/tmp/snaplog/{DATE}.log)
     -c --config   specify config file (list of commands to run)
     -v --verbose  specify multiple times to increase verbosity
 HELP
@@ -42,7 +42,7 @@ based on the detected applications.
 
 =head1 VERSION
 
-crashlog 0.0.1
+snaplog 0.0.1
 
 =cut
 
@@ -50,8 +50,8 @@ my $VERSION = '0.0.1';
 
 =head2 CONFIG
 
-The config file format for B<crashlog> is very simple.  Each line is a single
-command that will be run by B<crashlog>.
+The config file format for B<snaplog> is very simple.  Each line is a single
+command that will be run by B<snaplog>.
 
 There is a single directive, "#if" which controls whether the commands after it
 will be executed.  During config file processing, the #if directive will cause
@@ -251,8 +251,8 @@ sub main {
       open($outfh, ">>$opt->{out}") or die "unable to open: $opt->{out}\n";
     }
   } else {
-    $opt->{'out'} = "/var/tmp/crashlog/$date.log";
-    mkdir "/var/tmp/crashlog" unless -d "/var/tmp/crashlog";
+    $opt->{'out'} = "/var/tmp/snaplog/$date.log";
+    mkdir "/var/tmp/snaplog" unless -d "/var/tmp/snaplog";
     open($outfh, ">>$opt->{out}") or die "unable to open: $opt->{out}\n";
   }
 
