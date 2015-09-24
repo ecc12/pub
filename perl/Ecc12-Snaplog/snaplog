@@ -200,14 +200,16 @@ sub main {
         return;
       }
 
-      print "Command: $data->{command}\n";
-      print "Exit: $data->{return}\n";
-      print "-----BEGIN OUTPUT-----\n";
-      print $data->{"output"};
-      print "-----END OUTPUT-----\n";
-      print "-----BEGIN ERROR-----\n";
-      print $data->{"error"};
-      print "-----END ERROR-----\n\n";
+      $data->{'command'} =~ /^(\w+)/;
+      my $cmd = $1;
+
+      my $date = `date -u +"%Y-%m-%dT%H:%M:%SZ"`;
+      chomp $date;
+
+      printf "%s:%s:%s:cmd:%s\n", $data->{'hostname'}, $date, $cmd, $data->{'command'};
+      printf "%s:%s:%s:ret:%s\n", $data->{'hostname'}, $date, $cmd, $data->{'return'};
+      printf "%s:%s:%s:out:%s\n", $data->{'hostname'}, $date, $cmd, $_ for split /\n/, $data->{'output'};
+      printf "%s:%s:%s:err:%s\n", $data->{'hostname'}, $date, $cmd, $_ for split /\n/, $data->{'error'};
   };
 
   my $config = <<DEFAULT;
