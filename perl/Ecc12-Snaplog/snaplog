@@ -6,9 +6,29 @@ use warnings;
 
 crashlog - A tool for collecting diagnostic data in a hurry
 
+=cut
+
+package Ecc12::CrashLog;
+
 =head1 SYNOPSIS
 
 crashlog [remote hostname]
+
+    -h --help     print this message
+    -H --host     specify 
+    -o --file     file to write the output to (default: STDOUT)
+    -v --verbose  specify multiple times to increase verbosity
+
+=cut
+
+my $HELP = <<HELP;
+crashlog [remote hostname]
+
+    -h --help     print this message
+    -H --host     specify 
+    -o --file     file to write the output to (default: STDOUT)
+    -v --verbose  specify multiple times to increase verbosity
+HELP
 
 =head1 DESCRIPTION
 
@@ -23,8 +43,6 @@ crashlog 0.0.1
 =cut
 
 my $VERSION = '0.0.1';
-
-package Ecc12::CrashLog;
 
 =head1 SUBROUTINES
 
@@ -45,12 +63,14 @@ B<Returns> (hashref) options parsed from commandline
 
 sub opts {
   my $opts = {
+    "help" => 0,
     "host" => [],
     "file" => "-",
     "verbose" => 0,
   };
   use Getopt::Long;
   GetOptions (
+    "help|h" => \$opts->{'help'},
     "host|H=s" => \@{ $opts->{'host'} }, 
     "file|out|o=s" => \$opts->{'file'},
     "verbose|v+" => \$opts->{'verbose'},
@@ -166,6 +186,11 @@ commands.
 
 sub main {
   my $opt = opts();
+
+  if($opt->{'help'}) {
+    print $HELP;
+    return;
+  }
 
   my $printer = sub {
       my ($err, $data) = @_;
