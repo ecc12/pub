@@ -15,7 +15,7 @@ package Ecc12::CrashLog;
 crashlog [remote hostname]
 
     -h --help     print this message
-    -H --host     specify 
+    -H --host     specify multiple times for multiple remost hosts
     -o --file     file to write the output to (default: STDOUT)
     -v --verbose  specify multiple times to increase verbosity
 
@@ -25,7 +25,7 @@ my $HELP = <<HELP;
 crashlog [remote hostname]
 
     -h --help     print this message
-    -H --host     specify 
+    -H --host     specify multiple times for multiple remost hosts
     -o --file     file to write the output to (default: STDOUT)
     -v --verbose  specify multiple times to increase verbosity
 HELP
