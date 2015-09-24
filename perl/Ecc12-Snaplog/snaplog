@@ -12,7 +12,7 @@ package Ecc12::CrashLog;
 
 =head1 SYNOPSIS
 
-crashlog [remote hostname]
+crashlog
 
     -h --help     print this message
     -H --host     specify multiple times for multiple remost hosts
@@ -22,7 +22,7 @@ crashlog [remote hostname]
 =cut
 
 my $HELP = <<HELP;
-crashlog [remote hostname]
+crashlog
 
     -h --help     print this message
     -H --host     specify multiple times for multiple remost hosts
