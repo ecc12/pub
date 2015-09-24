@@ -134,8 +134,8 @@ sub parse_config {
   my $parsing = 1;
 
   for my $entry(@entries) {
-    if($entry =~ /^#/) {
-      my $run = substr($entry, 1);
+    if($entry =~ /^#if\s/) {
+      my $run = substr($entry, 4);
       run($run, undef, sub {
         my ($error, $data) = @_;
         if($error || $data->{'return'}) {
@@ -144,6 +144,8 @@ sub parse_config {
           $parsing = 1;
         }
       });
+      next;
+    } elsif($entry =~ /^#/) {
       next;
     }
     
@@ -192,7 +194,7 @@ vmstat 1 10
 iostat 1 10
 free -m
 df -h
-#which apachectl
+#if which apachectl
 links -dump http://127.0.0.1/server-status
 DEFAULT
   for my $command(@{ parse_config($config) }) {
