@@ -48,6 +48,47 @@ crashlog 0.0.1
 
 my $VERSION = '0.0.1';
 
+=head2 CONFIG
+
+The config file format for B<crashlog> is very simple.  Each line is a single
+command that will be run by B<crashlog>.
+
+There is a single directive, "#if" which controls whether the commands after it
+will be executed.  During config file processing, the #if directive will cause
+the specified command to be executed.  If that command returns a sucessfull
+return code (zero), then the commands after it will be executed.  If that
+command returns an error return code (non-zero), then the commands that follow
+it will not be executed. 
+
+This is the built-in config:
+
+    id
+    date
+    top -bn1
+    ps auxfww
+    vmstat 1 10
+    iostat 1 10
+    free -m
+    df -h
+    #if which apachectl
+    links -dump http://127.0.0.1/server-status
+    
+
+=cut
+
+my $DEFAULTCONFIG = <<DEFAULTCONFIG;
+id
+date
+top -bn1
+ps auxfww
+vmstat 1 10
+iostat 1 10
+free -m
+df -h
+#if which apachectl
+links -dump http://127.0.0.1/server-status
+DEFAULTCONFIG
+
 =head1 SUBROUTINES
 
 =head2 B<opts>()
@@ -234,18 +275,7 @@ sub main {
       printf $outfh "%s:%s:%s:err:%s\n", $data->{'hostname'}, $date, $cmd, $_ for split /\n/, $data->{'error'};
   };
 
-  my $config = <<DEFAULT;
-id
-date
-top -bn1
-ps auxfww
-vmstat 1 10
-iostat 1 10
-free -m
-df -h
-#if which apachectl
-links -dump http://127.0.0.1/server-status
-DEFAULT
+  my $config = $DEFAULTCONFIG;
 
   if(defined($opt->{'config'})) {
     $config = "";
