@@ -54,6 +54,7 @@ is called directly.
 B<Returns> (hashref) options parsed from commandline
 
     {
+      "help" => (integer) 1 if help text is requested, 0 otherwise (CLI mode)
       "host" => ["host1", "host2"] or undef for local,
       "file" => "filename" or "-" for stdout,
       "verbose" => (integer) 0 or larger number indicating verbosity
