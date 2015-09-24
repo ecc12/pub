@@ -24,7 +24,135 @@ crashlog 0.0.1
 
 my $VERSION = '0.0.1';
 
+package Ecc12::CrashLog;
 
+=head1 SUBROUTINES
+
+=head2 B<opts>()
+
+Utility function for parsing options from the commandline when the script
+is called directly.
+
+B<Returns> (hashref) options parsed from commandline
+
+    {
+      "host" => ["host1", "host2"] or undef for local,
+      "file" => "filename" or "-" for stdout,
+      "verbose" => (integer) 0 or larger number indicating verbosity
+    }
+
+=cut
+
+sub opts {
+  my $opts = {
+    "host" => [],
+    "file" => "-",
+    "verbose" => 0,
+  };
+  use Getopt::Long;
+  GetOptions (
+    "host|H=s" => \@{ $opts->{'host'} }, 
+    "file|out|o=s" => \$opts->{'file'},
+    "verbose|v+" => \$opts->{'verbose'},
+  );
+  return $opts;
+}
+
+=head run(command, hostname, callback)
+
+I<command> is a required parameter.
+
+Run the command specified by I<command>.  If I<hostname> is a scalar, run the
+command against the host specified by that string.
+
+If I<callback> is specified, then call I<callback>(I<err>, I<data>).
+
+    $err = (string) error text or undef if no error
+    $data = {
+      'return' => (integer) return code,
+      'out' => (string) standard output response from command,
+      'error' => (string) error response from command,
+    }
+
+B<Returns> (hashref) the value specified by I<data> above or undef if there was
+an error.
+
+Using the callback is the best way to capture error strings.
+
+=cut
+
+sub run {
+  my $command = shift or die "run: command is a require parameter\n";
+  my $hostname = shift;
+  my $callback = shift;
+  my $error = undef;
+  my $data = {
+    "command" => $command,
+    "hostname" => $hostname,
+    "return" => undef,
+    "output" => "",
+    "error" => ""
+  };
+
+  if(!defined($hostname)) {
+    use IPC::Open3;
+    my $pid = open3(\*WRITER, \*READER, \*ERROR, $command);  
+    close(WRITER);
+    my ($obuf, $ebuf) = ("","");
+    while(defined($obuf = <READER>) || defined($ebuf = <ERROR>)) {
+      $data->{"output"} .= $obuf;
+      $data->{"error"} .= $ebuf;
+    }
+    waitpid($pid, 0) or $error = $!;
+    $data->{"return"} = $?>>8;
+  } else {
+    $error = "remote call unimplimented\n";
+  }
+
+  &$callback($error, $data);
+}
+
+=head2 B<main>()
+
+The main subroutine.  Called when the package is invoked as a script.
+
+This subroutine parses options, and loops through all the diagnostic 
+commands.
+
+=cut
+
+sub main {
+  my $opt = opts();
+
+  my $printer = sub {
+      my ($err, $data) = @_;
+      $data->{"hostname"} = 'localhost' unless $data->{"hostname"};
+      if($err) {
+        print STDERR "ERROR on $data->{hostname}: $err";
+        return;
+      }
+
+      print "Command: $data->{command}\n";
+      print "Exit: $data->{return}\n";
+      print "-----BEGIN OUTPUT-----\n";
+      print $data->{"output"};
+      print "-----END OUTPUT-----\n";
+      print "-----BEGIN ERROR-----\n";
+      print $data->{"error"};
+      print "-----END ERROR-----\n";
+  };
+
+  my $command = "id";
+  if($#{ $opt->{'host'} } > -1) {
+    for my $host(@{ $opt->{'host'} }) {
+      print "===== $host =====\n";
+      run($command, $host, $printer);
+    }
+  } else {
+    run($command, undef, $printer);
+  }
+}
+main() unless caller;
 
 =head1 BUGS
 
