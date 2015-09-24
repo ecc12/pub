@@ -79,7 +79,7 @@ sub opts {
   GetOptions (
     "help|h" => \$opts->{'help'},
     "host|H=s" => \@{ $opts->{'host'} }, 
-    "out|o=s" => \$opts->{'file'},
+    "out|o=s" => \$opts->{'out'},
     "config|c=s" => \$opts->{'config'},
     "verbose|v+" => \$opts->{'verbose'},
   );
