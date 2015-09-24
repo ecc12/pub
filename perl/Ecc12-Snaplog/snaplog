@@ -16,7 +16,8 @@ crashlog
 
     -h --help     print this message
     -H --host     specify multiple times for multiple remost hosts
-    -o --file     file to write the output to (default: STDOUT)
+    -o --out      file to write the output to or - for STDOUT
+                  (default: /var/tmp/crashlog/{DATE}.log)
     -v --verbose  specify multiple times to increase verbosity
 
 =cut
@@ -26,7 +27,8 @@ crashlog
 
     -h --help     print this message
     -H --host     specify multiple times for multiple remost hosts
-    -o --file     file to write the output to (default: STDOUT)
+    -o --out      file to write the output to or - for STDOUT
+                  (default: /var/tmp/crashlog/{DATE}.log)
     -v --verbose  specify multiple times to increase verbosity
 HELP
 
@@ -66,14 +68,14 @@ sub opts {
   my $opts = {
     "help" => 0,
     "host" => [],
-    "file" => "-",
+    "out" => undef,
     "verbose" => 0,
   };
   use Getopt::Long;
   GetOptions (
     "help|h" => \$opts->{'help'},
     "host|H=s" => \@{ $opts->{'host'} }, 
-    "file|out|o=s" => \$opts->{'file'},
+    "out|o=s" => \$opts->{'file'},
     "verbose|v+" => \$opts->{'verbose'},
   );
   return $opts;
@@ -192,6 +194,22 @@ sub main {
     return;
   }
 
+  my $date = `date -u +"%Y-%m-%dT%H:%M:%SZ"`;
+  chomp $date;
+  my $outfh = undef;
+
+  if(defined($opt->{'out'})) {
+    if($opt->{'out'} eq "-") {
+      $outfh = *STDOUT;
+    } else {
+      open($outfh, ">>$opt->{out}") or die "unable to open: $opt->{out}\n";
+    }
+  } else {
+    $opt->{'out'} = "/var/tmp/crashlog/$date.log";
+    mkdir "/var/tmp/crashlog" unless -d "/var/tmp/crashlog";
+    open($outfh, ">>$opt->{out}") or die "unable to open: $opt->{out}\n";
+  }
+
   my $printer = sub {
       my ($err, $data) = @_;
       $data->{"hostname"} = 'localhost' unless $data->{"hostname"};
@@ -203,13 +221,12 @@ sub main {
       $data->{'command'} =~ /^(\w+)/;
       my $cmd = $1;
 
-      my $date = `date -u +"%Y-%m-%dT%H:%M:%SZ"`;
-      chomp $date;
-
-      printf "%s:%s:%s:cmd:%s\n", $data->{'hostname'}, $date, $cmd, $data->{'command'};
-      printf "%s:%s:%s:ret:%s\n", $data->{'hostname'}, $date, $cmd, $data->{'return'};
-      printf "%s:%s:%s:out:%s\n", $data->{'hostname'}, $date, $cmd, $_ for split /\n/, $data->{'output'};
-      printf "%s:%s:%s:err:%s\n", $data->{'hostname'}, $date, $cmd, $_ for split /\n/, $data->{'error'};
+      printf STDOUT "." if $opt->{'verbose'} == 1;
+      printf STDOUT "Completed (ret %s): %s\n", $data->{'return'}, $data->{'command'} if $opt->{'verbose'} >= 2;
+      printf $outfh "%s:%s:%s:cmd:%s\n", $data->{'hostname'}, $date, $cmd, $data->{'command'};
+      printf $outfh "%s:%s:%s:ret:%s\n", $data->{'hostname'}, $date, $cmd, $data->{'return'};
+      printf $outfh "%s:%s:%s:out:%s\n", $data->{'hostname'}, $date, $cmd, $_ for split /\n/, $data->{'output'};
+      printf $outfh "%s:%s:%s:err:%s\n", $data->{'hostname'}, $date, $cmd, $_ for split /\n/, $data->{'error'};
   };
 
   my $config = <<DEFAULT;
@@ -234,6 +251,9 @@ DEFAULT
       run($command, undef, $printer);
     }
   }
+
+  printf STDOUT "\n" if $opt->{'verbose'} == 1;
+  printf STDOUT "Logged to: %s\n", $opt->{'out'} if $opt->{'verbose'} >= 1;
 }
 main() unless caller;
 
