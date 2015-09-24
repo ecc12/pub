@@ -58,7 +58,7 @@ sub opts {
   return $opts;
 }
 
-=head run(command, hostname, callback)
+=head2 run(command, hostname, callback)
 
 I<command> is a required parameter.
 
