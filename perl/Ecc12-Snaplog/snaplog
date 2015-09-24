@@ -114,20 +114,19 @@ sub run {
     "error" => ""
   };
 
-  if(!defined($hostname)) {
-    use IPC::Open3;
-    my $pid = open3(\*WRITER, \*READER, \*ERROR, $command);  
-    close(WRITER);
-    my ($obuf, $ebuf) = ("","");
-    while(defined($obuf = <READER>) || defined($ebuf = <ERROR>)) {
-      $data->{"output"} .= $obuf if defined($obuf);
-      $data->{"error"} .= $ebuf if defined($ebuf);
-    }
-    waitpid($pid, 0) or $error = $!;
-    $data->{"return"} = $?>>8;
-  } else {
-    $error = "remote call unimplimented\n";
+  my $prefix = "";
+  $prefix = "ssh $hostname " if defined($hostname);
+
+  use IPC::Open3;
+  my $pid = open3(\*WRITER, \*READER, \*ERROR, "$prefix$command");  
+  close(WRITER);
+  my ($obuf, $ebuf) = ("","");
+  while(defined($obuf = <READER>) || defined($ebuf = <ERROR>)) {
+    $data->{"output"} .= $obuf if defined($obuf);
+    $data->{"error"} .= $ebuf if defined($ebuf);
   }
+  waitpid($pid, 0) or $error = $!;
+  $data->{"return"} = $?>>8;
 
   &$callback($error, $data);
 }
