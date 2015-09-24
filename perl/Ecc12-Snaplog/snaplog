@@ -100,8 +100,8 @@ sub run {
     close(WRITER);
     my ($obuf, $ebuf) = ("","");
     while(defined($obuf = <READER>) || defined($ebuf = <ERROR>)) {
-      $data->{"output"} .= $obuf;
-      $data->{"error"} .= $ebuf;
+      $data->{"output"} .= $obuf if defined($obuf);
+      $data->{"error"} .= $ebuf if defined($ebuf);
     }
     waitpid($pid, 0) or $error = $!;
     $data->{"return"} = $?>>8;
@@ -110,6 +110,47 @@ sub run {
   }
 
   &$callback($error, $data);
+}
+
+=head2 B<parse_config>(text)
+
+Parse the config file contained in the string I<text>.
+
+Lines beginning with # specify commands that should be immediately run during
+parsing.  If the command returns 0, then all of the entries that follow it will
+be added to the command list.  If the command returns an error (not 0), then
+the entries that follow it will not be added to the command list.
+
+Entries are added to the command list by default.
+
+Returns (arrayref) of (string) commands that were added to the list
+
+=cut
+
+sub parse_config {
+  my $text = shift or die "parse_config: text is required\n";
+  my @entries = split /\n/, $text;
+  my $commands = [];
+  my $parsing = 1;
+
+  for my $entry(@entries) {
+    if($entry =~ /^#/) {
+      my $run = substr($entry, 1);
+      run($run, undef, sub {
+        my ($error, $data) = @_;
+        if($error || $data->{'return'}) {
+          $parsing = 0;
+        } else {
+          $parsing = 1;
+        }
+      });
+      next;
+    }
+    
+    push @{ $commands }, $entry if $parsing;
+  }
+
+  return $commands;
 }
 
 =head2 B<main>()
@@ -139,17 +180,30 @@ sub main {
       print "-----END OUTPUT-----\n";
       print "-----BEGIN ERROR-----\n";
       print $data->{"error"};
-      print "-----END ERROR-----\n";
+      print "-----END ERROR-----\n\n";
   };
 
-  my $command = "id";
-  if($#{ $opt->{'host'} } > -1) {
-    for my $host(@{ $opt->{'host'} }) {
-      print "===== $host =====\n";
-      run($command, $host, $printer);
+  my $config = <<DEFAULT;
+id
+date
+top -bn1
+ps auxfww
+vmstat 1 10
+iostat 1 10
+free -m
+df -h
+#which apachectl
+links -dump http://127.0.0.1/server-status
+DEFAULT
+  for my $command(@{ parse_config($config) }) {
+    if($#{ $opt->{'host'} } > -1) {
+      for my $host(@{ $opt->{'host'} }) {
+        print "===== $host =====\n";
+        run($command, $host, $printer);
+      }
+    } else {
+      run($command, undef, $printer);
     }
-  } else {
-    run($command, undef, $printer);
   }
 }
 main() unless caller;
