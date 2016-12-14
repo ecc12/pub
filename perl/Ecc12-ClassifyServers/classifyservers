@@ -1,0 +1,218 @@
+#!/usr/bin/perl -wT
+use 5.005;
+use strict;
+$ENV{'PATH'} = "/sbin:/bin:/usr/sbin:/usr/sbin";
+
+=head1 NAME
+
+classifyservers - a tool for printing facts corresponding to
+system environment and role
+
+=cut
+
+package Ecc12::ClassifyServers;
+
+=head1 SYNOPSIS
+
+classifyservers
+
+    --hostname    the server hostname to parse (default: this server)
+
+=cut
+
+my $HELP = <<HELP;
+classifyservers
+
+    --hostname    the server hostname to parse (default: this server)
+HELP
+
+=head1 DESCRIPTION
+
+This tool uses I</etc/serverenv>, I</etc/serverrole>, and various
+built-in regex patterns to derive the environment and role of the 
+specified hostname.  This information is printed to I<STDOUT> in 
+a format compatible with I<facter>.
+
+(The I</etc/serverenv> and I</etc/serverrole> files are ignored if
+the I<--hostname> argument is provided on the commandline.)
+
+=head1 VERSION
+
+classifyserver 0.0.1
+
+=cut
+
+my $VERSION = '0.0.1';
+
+=head1 SUBROUTINES
+
+=head2 B<untaintedArgs>()
+
+Use Getopt::Long to read arguments from the command line as specified
+in B<USAGE>.  All arguments must be processed through regex in order
+to untaint them.
+
+=over 4
+
+=item returns (hashref of scalars)
+
+a hashref containing scalars passed in from the commandline.  Each key
+corresponds to a separate commandline option.
+
+=back
+
+=cut
+
+sub untaintedArgs {
+  my $args = {};
+  my $hostname = '';
+
+  use Getopt::Long;
+  GetOptions('hostname=s' => \$hostname);
+
+  if($hostname =~ /^([a-zA-Z0-9\-]+)/) {
+    $args->{'hostname'} = $1;
+  } else {
+    $args->{'hostname'} = '';
+  }
+
+  return $args;
+}
+
+=head2 B<switchEnv>(I<hostname>)
+
+Look for the presence of I</etc/serverenv> or use built-in regex to
+discover the correct environment label.  Return the label as a string 
+or return nothing otherwise.
+
+=over 4
+
+=item param I<hostname> (string)
+
+a hostname which should be compared against known rules
+
+=item return (string or nothing)
+
+a string label for the environment to which I<hostname> belongs
+
+=back
+
+=cut
+
+sub switchEnv {
+  if(-f "/etc/serverenv") {SWITCHENV_IF:{
+    open ENV, "/etc/serverenv" or last SWITCHENV_IF;
+    my $env = <ENV>; 
+    close ENV;
+    $env =~ /^([a-zA-Z0-9\-]+)/;
+    return $1 if $1;
+  }}
+
+  my $hostname = shift or die "missing param: hostname\n";
+  $_ = $hostname;
+
+  return "test" if /test/;
+}
+
+=head2 B<switchRole>(I<hostname>)
+
+Look for the presence of I</etc/serverrole> or use built-in regex to
+discover the correct role label.  Return the label as a string 
+or return nothing otherwise.
+
+=over 4
+
+=item param I<hostname> (string)
+
+a hostname which should be compared against known rules
+
+=item return (string or nothing)
+
+a string label for the role to which I<hostname> belongs
+
+=back
+
+
+=cut
+
+sub switchRole {
+  if(-f "/etc/serverrole") {SWITCHROLE_IF:{
+    open ROLE, "/etc/serverrole" or last SWITCHENV_IF;
+    my $role = <ROLE>; 
+    close ROLE;
+    $role =~ /^([a-zA-Z0-9\-]+)/;
+    return $1 if $1;
+  }}
+
+  my $hostname = shift or die "missing param: hostname\n";
+  $_ = $hostname;
+
+  return "web" if /web/;
+
+}
+
+=head2 B<main>()
+
+Parse commandline arguments, determine hostname, use B<switchEnv> and
+B<switchRole> to determine host information, and output the facts.
+
+This subroutine is called when the package is run as a script.
+
+=cut
+
+sub main {
+  my $args = untaintedArgs();
+
+  my $hostname = $args->{'hostname'} || "";
+  unless($hostname) {
+    my $cmdout = `hostname`;
+    $cmdout =~ /^([a-zA-Z0-9\-]+)/;
+    $hostname = $1 if $1;
+  }
+
+  my $env = switchEnv($hostname) || 'unclassified';
+  my $role = switchRole($hostname) || 'unclassified';
+
+  printf "serverenv=%s\nserverrole=%s\n", $env, $role;
+}
+
+main() unless caller;
+
+=head1 BUGS
+
+Open a ticket assigned to Linux Systems Engineering (or more specifically 
+Cameron King) to report bugs with this application.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2016, Cameron King.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+=head1 AUTHOR
+
+Cameron King <cking@ckxng.com>
+
+=cut
+
+1;
