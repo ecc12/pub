@@ -5,8 +5,8 @@ This open source repository is provided by ECC.
   large, structured efforts.
                                                                   Tim O'Reilly 
 
-More information is available at http://www.ecc.guru.
+ECC is not currently in business.  The various projects that are published in 
+this repo have been duplicated into their own repositories under 
+https://github.com/ckxng.
 
-Additional projects can be found at https://github.com/ecc12.
-
-Please contact Cameron King at cameron.king@ecc.email for questions or comments.
+Please contact Cameron King <cameronking.me> for questions or comments.
